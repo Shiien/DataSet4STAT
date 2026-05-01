@@ -21,13 +21,13 @@ def low_rank_model(D,K):
     def log_pdf(x, y):
         chex.assert_shape(x.T@U@U.T@b,(1,))
         chex.assert_shape(y,(1,))
-        return jnp.squeeze(distrax.Bernoulli(jax.nn.sigmoid(x.T@U@U.T@b)).log_prob(y))
+        return jnp.squeeze(distrax.Bernoulli(probs=jax.nn.sigmoid(x.T@U@U.T@b)).log_prob(y))
     def sample(prng, bsz):
         prng, subprng = jax.random.split(prng)
         x = distrax.Normal(0.0,1.0)._sample_n(subprng, bsz*D)
         x = x.reshape((bsz, D, 1))
         subprng = jax.random.split(prng, bsz)
-        y = jax.vmap(lambda _x, pr: distrax.Bernoulli(jax.nn.sigmoid(_x.T@U@U.T@b)).sample(seed=pr), in_axes=(0,0))(x, subprng)
+        y = jax.vmap(lambda _x, pr: distrax.Bernoulli(probs=jax.nn.sigmoid(_x.T@U@U.T@b)).sample(seed=pr), in_axes=(0,0))(x, subprng)
         return jnp.squeeze(x,axis=-1),jnp.squeeze(y, axis=-1)
     return log_pdf, sample
 
